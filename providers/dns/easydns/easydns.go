@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,14 +35,15 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Endpoint           *url.URL
-	Token              string
-	Key                string
-	TTL                int
-	HTTPClient         *http.Client
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	SequenceInterval   time.Duration
+	Endpoint           *url.URL      `yaml:"-"`
+	EndpointUrl        string        `yaml:"endpoint"`
+	Token              string        `yaml:"token"`
+	Key                string        `yaml:"key"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	SequenceInterval   time.Duration `yaml:"sequenceInterval"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -53,6 +55,19 @@ func NewDefaultConfig() *Config {
 		SequenceInterval:   env.GetOrDefaultSecond(EnvSequenceInterval, dns01.DefaultPropagationTimeout),
 		HTTPClient: &http.Client{
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
+		},
+	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		SequenceInterval:   dns01.DefaultPropagationTimeout,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
 		},
 	}
 }
@@ -85,6 +100,29 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Key = values[EnvKey]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	if config.EndpointUrl != "" {
+		endpoint, err := url.Parse(config.EndpointUrl)
+		if err != nil {
+			return nil, fmt.Errorf("easydns: %w", err)
+		}
+		config.Endpoint = endpoint
+	} else {
+		endpoint, err := url.Parse(internal.DefaultBaseURL)
+		if err != nil {
+			return nil, fmt.Errorf("easydns: %w", err)
+		}
+		config.Endpoint = endpoint
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for EasyDNS.

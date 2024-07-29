@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -29,13 +30,13 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	CustomerName       string
-	UserName           string
-	Password           string
-	HTTPClient         *http.Client
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	CustomerName       string        `yaml:"customerName"`
+	UserName           string        `yaml:"userName"`
+	Password           string        `yaml:"password"`
+	HTTPClient         *http.Client  `yaml:"-"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -46,6 +47,18 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		HTTPClient: &http.Client{
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
+		},
+	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
 		},
 	}
 }
@@ -71,6 +84,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = values[EnvPassword]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Dyn DNS.

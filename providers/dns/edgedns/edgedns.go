@@ -4,6 +4,8 @@ package edgedns
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/ini.v1"
+	"gopkg.in/yaml.v3"
 	"slices"
 	"strings"
 	"time"
@@ -41,10 +43,11 @@ const maxBody = 131072
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	edgegrid.Config
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	edgegrid.Config    `yaml:"-"`
+	RawConfig          string        `yaml:"config"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -53,6 +56,16 @@ func NewDefaultConfig() *Config {
 		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, defaultPropagationTimeout),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, defaultPollInterval),
+		Config:             edgegrid.Config{MaxBody: maxBody},
+	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: defaultPropagationTimeout,
+		PollingInterval:    defaultPollInterval,
 		Config:             edgegrid.Config{MaxBody: maxBody},
 	}
 }
@@ -87,6 +100,22 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Config = conf
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	config.Config.MaxBody = maxBody
+	iniData := strings.NewReader(config.RawConfig)
+	err = ini.MapTo(config.Config, iniData)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for EdgeDNS.

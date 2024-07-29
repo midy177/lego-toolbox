@@ -345,13 +345,29 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return duckdns.NewDNSProviderConfig(cfg)
 	case "dyn":
-		return dyn.NewDNSProvider()
+		cfg, err := dyn.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return dyn.NewDNSProviderConfig(cfg)
 	case "dynu":
-		return dynu.NewDNSProvider()
+		cfg, err := dynu.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return dynu.NewDNSProviderConfig(cfg)
 	case "easydns":
-		return easydns.NewDNSProvider()
+		cfg, err := easydns.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return easydns.NewDNSProviderConfig(cfg)
 	case "edgedns", "fastdns": // "fastdns" is for compatibility with v3, must be dropped in v5
-		return edgedns.NewDNSProvider()
+		cfg, err := edgedns.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return edgedns.NewDNSProviderConfig(cfg)
 	case "efficientip":
 		return efficientip.NewDNSProvider()
 	case "epik":

@@ -82,6 +82,7 @@ require (
 	google.golang.org/api v0.172.0
 	gopkg.in/ns1/ns1-go.v2 v2.7.13
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -177,5 +178,4 @@ require (
 	google.golang.org/grpc v1.63.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
