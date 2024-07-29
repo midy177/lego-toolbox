@@ -70,6 +70,23 @@ func DefaultConfig() *Config {
 	}
 }
 
+func GetYamlTemple() string {
+	return `# config.yaml
+propagationTimeout: 600000000000 # 10 minutes in nanoseconds
+pollingInterval: 30000000000     # 30 seconds in nanoseconds
+ttl: 3600                        # TTL (Time-To-Live) value in seconds
+
+config: |
+  host = example.com
+  client_token = your_client_token
+  client_secret = your_client_secret
+  access_token = your_access_token
+  account_key = your_account_key
+  headers_to_sign = Authorization, Content-Type
+  max_body = 131072
+  debug = false`
+}
+
 // DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
