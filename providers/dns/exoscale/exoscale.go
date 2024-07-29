@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	egoscale "github.com/exoscale/egoscale/v2"
@@ -36,13 +37,13 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIKey             string
-	APISecret          string
-	Endpoint           string
-	HTTPTimeout        time.Duration
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int64
+	APIKey             string        `yaml:"apiKey"`
+	APISecret          string        `yaml:"apiSecret"`
+	Endpoint           string        `yaml:"endpoint"`
+	HTTPTimeout        time.Duration `yaml:"httpTimeout"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int64         `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -53,6 +54,27 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		HTTPTimeout:        env.GetOrDefaultSecond(EnvHTTPTimeout, 60*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                int64(dns01.DefaultTTL),
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPTimeout:        60 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+apiKey: "your_api_key"                     # API 密钥
+apiSecret: "your_api_secret"               # API 秘密
+endpoint: "https://api.example.com"        # API 端点
+httpTimeout: 60s                           # HTTP 超时时间，单位为秒
+propagationTimeout: 60s                    # 传播超时时间，单位为秒
+pollingInterval: 2s                        # 轮询间隔时间，单位为秒
+ttl: 120                                   # TTL 值，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -76,6 +98,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Endpoint = env.GetOrFile(EnvEndpoint)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Exoscale.

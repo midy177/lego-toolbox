@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -32,15 +33,15 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Username           string
-	Password           string
-	Hostname           string
-	DNSName            string
-	ViewName           string
-	InsecureSkipVerify bool
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	HTTPClient         *http.Client
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	Hostname           string        `yaml:"hostname"`
+	DNSName            string        `yaml:"dnsName"`
+	ViewName           string        `yaml:"viewName"`
+	InsecureSkipVerify bool          `yaml:"insecureSkipVerify"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -52,6 +53,29 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+username: "your_username"          # 用户名，用于身份验证
+password: "your_password"          # 密码，用于身份验证
+hostname: "your_hostname"          # 主机名
+dnsName: "your_dns_name"           # DNS 名称
+viewName: "your_view_name"         # 视图名称
+insecureSkipVerify: false          # 是否跳过 SSL 证书验证
+propagationTimeout: 600s           # 传播超时时间，单位为秒
+pollingInterval: 30s               # 轮询间隔时间，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -77,6 +101,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.InsecureSkipVerify = env.GetOrDefaultBool(EnvInsecureSkipVerify, false)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Efficient IP.

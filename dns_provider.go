@@ -369,13 +369,29 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return edgedns.NewDNSProviderConfig(cfg)
 	case "efficientip":
-		return efficientip.NewDNSProvider()
+		cfg, err := efficientip.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return efficientip.NewDNSProviderConfig(cfg)
 	case "epik":
-		return epik.NewDNSProvider()
+		cfg, err := epik.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return epik.NewDNSProviderConfig(cfg)
 	case "exec":
-		return exec.NewDNSProvider()
+		cfg, err := exec.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return exec.NewDNSProviderConfig(cfg)
 	case "exoscale":
-		return exoscale.NewDNSProvider()
+		cfg, err := exoscale.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return exoscale.NewDNSProviderConfig(cfg)
 	case "freemyip":
 		return freemyip.NewDNSProvider()
 	case "gandi":

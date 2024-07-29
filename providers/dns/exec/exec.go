@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"os/exec"
 	"time"
@@ -29,11 +30,11 @@ const (
 
 // Config Provider configuration.
 type Config struct {
-	Program            string
-	Mode               string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	SequenceInterval   time.Duration
+	Program            string        `yaml:"program"`
+	Mode               string        `yaml:"mode"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	SequenceInterval   time.Duration `yaml:"sequenceInterval"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -43,6 +44,24 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		SequenceInterval:   env.GetOrDefaultSecond(EnvSequenceInterval, dns01.DefaultPropagationTimeout),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		SequenceInterval:   dns01.DefaultPropagationTimeout,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+program: "your_program"               # 程序名称
+mode: "your_mode"                     # 模式
+propagationTimeout: 60s               # 传播超时时间，单位为秒
+pollingInterval: 2s                   # 轮询间隔时间，单位为秒
+sequenceInterval: 60s                 # 序列间隔时间，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -63,6 +82,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Mode = os.Getenv(EnvMode)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig returns a new DNS provider which runs the given configuration

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"strings"
 	"time"
@@ -28,11 +29,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Signature          string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	Signature          string        `yaml:"signature"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -45,6 +46,26 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                3600,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+signature: "your_signature"         # 签名，用于认证或其他用途
+propagationTimeout: 60s            # 传播超时时间，单位为秒
+pollingInterval: 2s                # 轮询间隔时间，单位为秒
+ttl: 3600                           # TTL（生存时间），单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -65,6 +86,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Signature = values[EnvSignature]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Epik.
