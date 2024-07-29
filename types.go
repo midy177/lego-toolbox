@@ -1,4 +1,4 @@
-package legox
+package legotoolbox
 
 type AlidnsConfig struct {
 	AccessKey string `json:"accessKey"`

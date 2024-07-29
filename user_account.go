@@ -1,4 +1,4 @@
-package legox
+package legotoolbox
 
 import (
 	"crypto"
@@ -7,26 +7,53 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
-	"errors"
-	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/challenge"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/suyuan32/simple-admin-core/cert/ent"
-	"github.com/suyuan32/simple-admin-core/cert/ent/domaincert"
-	"strings"
 )
 
-type LegoUser struct {
-	Account    *ent.AcmeAccount
-	LegoClient *lego.Client
+// LegoAccount is the model entity for the LegoAccount schema.
+type LegoAccount struct {
+	// Email | 邮箱
+	Email string `json:"email,omitempty"`
+	// Private key | 私钥
+	PrivateKey string `json:"private_key,omitempty"`
+	// Reg info | 注册信息
+	Registration []byte `json:"registration,omitempty"`
 }
 
-func FromAccountUser(a *ent.AcmeAccount) *LegoUser {
+// CertificateConfig is the model entity for the DomainCert schema.
+type CertificateConfig struct {
+	// Subject Alternative Name | 证书域名扩展
+	SAN []string `json:"san,omitempty"`
+	// common name | 证书域名通用名称
+	CommonDomain string `json:"common_domain,omitempty"`
+	// encryption type | 证书加密方式
+	EncType EncType `json:"enc_type,omitempty"`
+	// Cert url | 证书网址
+	CertURL string `json:"cert_url,omitempty"`
+	// Cert stable url | 证书稳定网址
+	CertStableURL string `json:"cert_stable_url,omitempty"`
+	// Private key | 证书私钥
+	PrivateKey []byte `json:"private_key,omitempty"`
+	// Certificate | 证书链
+	Certificate []byte `json:"certificate,omitempty"`
+	// Issuer certificate | 发行人证书
+	IssuerCertificate []byte `json:"issuer_certificate,omitempty"`
+	// CSR | 证书签名请求
+	CSR []byte `json:"csr,omitempty"`
+}
+
+type LegoUser struct {
+	Account *LegoAccount
+	Client  *lego.Client
+}
+
+func NewUserFromAccount(acc *LegoAccount) *LegoUser {
 	return &LegoUser{
-		Account: a,
+		Account: acc,
 	}
 }
 func (l *LegoUser) GetEmail() string {
@@ -34,7 +61,7 @@ func (l *LegoUser) GetEmail() string {
 }
 func (l *LegoUser) GetRegistration() *registration.Resource {
 	var reg registration.Resource
-	err := jsoniter.Unmarshal(l.Account.Reg, &reg)
+	err := jsoniter.Unmarshal(l.Account.Registration, &reg)
 	if err != nil {
 		return nil
 	}
@@ -53,19 +80,22 @@ func (l *LegoUser) GetPrivateKey() crypto.PrivateKey {
 }
 
 func (l *LegoUser) RegisterNewUser() error {
-	if len(l.Account.PrivateKey) != 0 {
-		return errors.New("the account has a private key")
+	if len(l.Account.PrivateKey) == 0 {
+		err := l.GeneratePrivateKey()
+		if err != nil {
+			return err
+		}
 	}
-	err := l.genPrivateKey()
-	if err != nil {
-		return err
+
+	if l.Client == nil {
+		err := l.NewClient(EC384)
+		if err != nil {
+			return err
+		}
 	}
-	err = l.newLegoClient(domaincert.EncTypeEC384)
-	if err != nil {
-		return err
-	}
+
 	// New users will need to register
-	reg, err := l.LegoClient.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+	reg, err := l.Client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {
 		return err
 	}
@@ -73,46 +103,48 @@ func (l *LegoUser) RegisterNewUser() error {
 	if err != nil {
 		return err
 	}
-	l.Account.Reg = regBytes
+	l.Account.Registration = regBytes
 	return nil
 }
 
 func (l *LegoUser) QueryUserRegistration() (*registration.Resource, error) {
-	reg, err := l.LegoClient.Registration.QueryRegistration()
+	reg, err := l.Client.Registration.QueryRegistration()
 	if err != nil {
 		return nil, err
 	}
 	return reg, err
 }
 
-func (l *LegoUser) ObtainCertificate(cert *ent.DomainCert, provider challenge.Provider) error {
-	err := l.newLegoClient(cert.EncType)
+func (l *LegoUser) ObtainCertificate(certCfg *CertificateConfig, provider challenge.Provider) error {
+	if l.Client == nil {
+		err := l.NewClient(certCfg.EncType)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := l.Client.Challenge.SetDNS01Provider(provider)
 	if err != nil {
 		return err
 	}
-	err = l.LegoClient.Challenge.SetDNS01Provider(provider)
-	if err != nil {
-		return err
-	}
-	domains := strings.Split(cert.Domains, ",")
 	request := certificate.ObtainRequest{
-		Domains: domains,
+		Domains: certCfg.SAN,
 		Bundle:  true,
 	}
-	certificates, err := l.LegoClient.Certificate.Obtain(request)
+	certificates, err := l.Client.Certificate.Obtain(request)
 	if err != nil {
 		return err
 	}
-	cert.CertDomain = certificates.Domain
-	cert.CertURL = certificates.CertURL
-	cert.CertStableURL = certificates.CertStableURL
-	cert.PrivateKey = certificates.PrivateKey
-	cert.Certificate = certificates.Certificate
-	cert.Csr = certificates.CSR
+	certCfg.CommonDomain = certificates.Domain
+	certCfg.CertURL = certificates.CertURL
+	certCfg.CertStableURL = certificates.CertStableURL
+	certCfg.PrivateKey = certificates.PrivateKey
+	certCfg.Certificate = certificates.Certificate
+	certCfg.CSR = certificates.CSR
 	return nil
 }
 
-func (l *LegoUser) genPrivateKey() error {
+func (l *LegoUser) GeneratePrivateKey() error {
 	// Create a user. New accounts need an email and private key to start.
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -126,31 +158,13 @@ func (l *LegoUser) genPrivateKey() error {
 	return nil
 }
 
-func (l *LegoUser) newLegoClient(KeyType domaincert.EncType) error {
+func (l *LegoUser) NewClient(KeyType EncType) error {
 	config := lego.NewConfig(l)
-	config.Certificate.KeyType = chooseKeyType(KeyType)
+	config.Certificate.KeyType = ConvertKeyType(KeyType)
 	client, err := lego.NewClient(config)
 	if err != nil {
 		return err
 	}
-	l.LegoClient = client
+	l.Client = client
 	return nil
-}
-
-func chooseKeyType(expr domaincert.EncType) certcrypto.KeyType {
-	switch expr {
-	case domaincert.EncTypeEC256:
-		return certcrypto.EC256
-	case domaincert.EncTypeEC384:
-		return certcrypto.EC384
-	case domaincert.EncTypeRSA2048:
-		return certcrypto.RSA2048
-	case domaincert.EncTypeRSA3072:
-		return certcrypto.RSA3072
-	case domaincert.EncTypeRSA4096:
-		return certcrypto.RSA4096
-	case domaincert.EncTypeRSA8192:
-		return certcrypto.RSA8192
-	}
-	return certcrypto.RSA2048
 }

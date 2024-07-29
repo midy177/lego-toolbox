@@ -1,4 +1,4 @@
-package legox
+package legotoolbox
 
 import "golang.org/x/sync/syncmap"
 
