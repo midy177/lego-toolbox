@@ -4,6 +4,7 @@ package vkcloud
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -39,18 +40,15 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	ProjectID string
-	Username  string
-	Password  string
-
-	DNSEndpoint string
-
-	IdentityEndpoint string
-	DomainName       string
-
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	ProjectID          string        `yaml:"projectID"`
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	DNSEndpoint        string        `yaml:"dnsEndpoint"`
+	IdentityEndpoint   string        `yaml:"identityEndpoint"`
+	DomainName         string        `yaml:"domainName"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -60,6 +58,31 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                60,
+		IdentityEndpoint:   defaultIdentityEndpoint,
+		DomainName:         defaultDomainName,
+		DNSEndpoint:        defaultDNSEndpoint,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 是用来配置 DNSProvider 的创建。
+projectID: "your_project_id"           # ProjectID，项目ID，用于标识您的项目
+username: "your_username"              # Username，用户名，用于身份验证
+password: "your_password"              # Password，密码，用于身份验证
+dnsEndpoint: "https://mcs.mail.ru/public-dns/v2/dns"     # DNSEndpoint，DNS 端点，用于与 DNS 服务提供商通信的 URL
+identityEndpoint: "https://infra.mail.ru/identity/v3/" # IdentityEndpoint，身份端点，用于身份验证的 URL
+domainName: "users"              # DomainName，域名，用于指定 DNS 区域
+propagationTimeout: 60s                # PropagationTimeout，传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 2s                    # PollingInterval，轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
+ttl: 60                                # TTL，DNS 记录的生存时间（秒）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -84,6 +107,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.DNSEndpoint = env.GetOrDefaultString(EnvDNSEndpoint, defaultDNSEndpoint)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for VK Cloud.

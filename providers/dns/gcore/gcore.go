@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"strings"
 	"time"
@@ -32,11 +33,11 @@ const (
 
 // Config for DNSProvider.
 type Config struct {
-	APIToken           string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	APIToken           string        `yaml:"apiToken"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -49,6 +50,27 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: defaultPropagationTimeout,
+		PollingInterval:    defaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+apiToken: "your_api_token"  # API 访问令牌
+propagationTimeout: 360s    # 传播超时时间
+pollingInterval: 20s        # 轮询间隔
+ttl: 120                    # DNS 记录的生存时间（秒）
+`
 }
 
 // DNSProvider an implementation of challenge.Provider contract.
@@ -68,6 +90,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APIToken = values[EnvPermanentAPIToken]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for G-Core DNS API.

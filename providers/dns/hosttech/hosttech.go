@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"strconv"
 	"sync"
@@ -29,11 +30,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIKey             string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	APIKey             string        `yaml:"apiKey"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -46,6 +47,27 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                3600,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config is used to configure the creation of the DNSProvider.
+apiKey: "your_api_key"          # API 密钥，用于对 API 请求进行身份验证
+propagationTimeout: 60s         # DNS 记录传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 2s             # 轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
+ttl: 3600                       # DNS 记录的生存时间（TTL），表示记录在 DNS 缓存中的有效时间，单位为秒（s）
+`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -69,6 +91,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APIKey = values[EnvAPIKey]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for hosttech.

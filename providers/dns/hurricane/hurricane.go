@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"strings"
 	"time"
@@ -27,11 +28,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Credentials        map[string]string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	SequenceInterval   time.Duration
-	HTTPClient         *http.Client
+	Credentials        map[string]string `yaml:"credentials"`
+	PropagationTimeout time.Duration     `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration     `yaml:"pollingInterval"`
+	SequenceInterval   time.Duration     `yaml:"sequenceInterval"`
+	HTTPClient         *http.Client      `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -44,6 +45,29 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: 300 * time.Second,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		SequenceInterval:   dns01.DefaultPropagationTimeout,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config is used to configure the creation of the DNSProvider.
+credentials:
+  apiKey: "your_api_key"           # API 密钥，用于身份验证
+  apiSecret: "your_api_secret"     # API 密钥，用于身份验证
+propagationTimeout: 300s           # DNS 记录传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 2s                # 轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
+sequenceInterval: 60s              # 序列间隔时间，指定执行序列操作之间的等待时间，单位为秒（s）
+`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -68,6 +92,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Credentials = credentials
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {

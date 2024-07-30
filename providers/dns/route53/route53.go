@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"math/rand"
 	"strings"
 	"time"
@@ -45,23 +46,19 @@ const (
 type Config struct {
 	// Static credential chain.
 	// These are not set via environment for the time being and are only used if they are explicitly provided.
-	AccessKeyID     string
-	SecretAccessKey string
-	SessionToken    string
-	Region          string
-
-	HostedZoneID  string
-	MaxRetries    int
-	AssumeRoleArn string
-	ExternalID    string
-
-	WaitForRecordSetsChanged bool
-
-	TTL                int
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-
-	Client *route53.Client
+	AccessKeyID              string          `yaml:"accessKeyID"`
+	SecretAccessKey          string          `yaml:"secretAccessKey"`
+	SessionToken             string          `yaml:"sessionToken"`
+	Region                   string          `yaml:"region"`
+	HostedZoneID             string          `yaml:"hostedZoneID"`
+	MaxRetries               int             `yaml:"maxRetries"`
+	AssumeRoleArn            string          `yaml:"assumeRoleArn"`
+	ExternalID               string          `yaml:"externalID"`
+	WaitForRecordSetsChanged bool            `yaml:"waitForRecordSetsChanged"`
+	TTL                      int             `yaml:"ttl"`
+	PropagationTimeout       time.Duration   `yaml:"propagationTimeout"`
+	PollingInterval          time.Duration   `yaml:"pollingInterval"`
+	Client                   *route53.Client `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -78,6 +75,38 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 4*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		//HostedZoneID:  env.GetOrFile(EnvHostedZoneID),
+		MaxRetries: 5,
+		//AssumeRoleArn: env.GetOrDefaultString(EnvAssumeRoleArn, ""),
+		//ExternalID:    env.GetOrDefaultString(EnvExternalID, ""),
+
+		WaitForRecordSetsChanged: true,
+
+		TTL:                10,
+		PropagationTimeout: 2 * time.Minute,
+		PollingInterval:    4 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+accessKeyID: "your_access_key_id"                 # AWS 访问密钥 ID
+secretAccessKey: "your_secret_access_key"         # AWS 秘密访问密钥
+sessionToken: "your_session_token"                # AWS 会话令牌
+region: "us-west-2"                               # AWS 区域
+hostedZoneID: "your_hosted_zone_id"               # 托管区域 ID
+maxRetries: 5                                     # 最大重试次数
+assumeRoleArn: "your_assume_role_arn"             # 假设角色 ARN
+externalID: "your_external_id"                    # 外部 ID
+waitForRecordSetsChanged: true                    # 是否等待记录集变更
+ttl: 10                                           # TTL，单位为秒
+propagationTimeout: 120s                          # 传播超时时间，单位为秒
+pollingInterval: 4s                               # 轮询间隔时间，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -99,6 +128,16 @@ type DNSProvider struct {
 // See also: https://github.com/aws/aws-sdk-go/wiki/configuring-sdk
 func NewDNSProvider() (*DNSProvider, error) {
 	return NewDNSProviderConfig(NewDefaultConfig())
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig takes a given config and returns a custom configured DNSProvider instance.

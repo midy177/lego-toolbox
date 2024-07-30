@@ -4,6 +4,7 @@ package ultradns
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -38,13 +39,12 @@ type DNSProvider struct {
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Username string
-	Password string
-	Endpoint string
-
-	TTL                int
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	Endpoint           string        `yaml:"endpoint"`
+	TTL                int           `yaml:"ttl"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -55,6 +55,26 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 4*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		Endpoint:           defaultEndpoint,
+		TTL:                120,
+		PropagationTimeout: 2 * time.Minute,
+		PollingInterval:    4 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 用于配置 DNSProvider 的创建。
+username: "your_username"         # 用户名，用于身份验证
+password: "your_password"         # 密码，与用户名配对用于身份验证
+endpoint: "https://api.ultradns.com/" # API 端点的 URL，指向 DNS 提供者的 API
+ttl: 120                          # DNS 记录的生存时间（秒），定义记录在缓存中存活的时间
+propagationTimeout: 120s          # 传播超时时间，定义 DNS 记录传播的最长时间
+pollingInterval: 4s               # 轮询间隔，定义检查 DNS 记录状态的时间间隔`
 }
 
 // NewDNSProvider returns a DNSProvider instance configured for ultradns.
@@ -71,6 +91,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = values[EnvPassword]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for ultradns.

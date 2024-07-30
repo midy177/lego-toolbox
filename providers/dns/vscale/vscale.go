@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"time"
@@ -33,12 +34,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	BaseURL            string
-	Token              string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	BaseURL            string        `yaml:"baseURL"`
+	Token              string        `yaml:"token"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -52,6 +53,29 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		BaseURL:            selectel.DefaultVScaleBaseURL,
+		TTL:                minTTL,
+		PropagationTimeout: 120 * time.Second,
+		PollingInterval:    2 * time.Second,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 是用来配置 DNSProvider 的创建。
+baseURL: "https://api.vscale.io/v1/domains"    # BaseURL，用于与服务提供商通信的基础 URL
+token: "your_api_token"               # Token，API 访问令牌，用于身份验证
+propagationTimeout: 120s              # PropagationTimeout，传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 2s                   # PollingInterval，轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
+ttl: 60                               # TTL，DNS 记录的生存时间（秒）
+`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -72,6 +96,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Token = values[EnvAPIToken]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Vscale.

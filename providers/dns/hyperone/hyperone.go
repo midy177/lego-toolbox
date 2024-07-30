@@ -30,14 +30,13 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIEndpoint      string
-	LocationID       string
-	PassportLocation string
-
-	TTL                int
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	HTTPClient         *http.Client
+	APIEndpoint        string        `yaml:"apiEndpoint"`
+	LocationID         string        `yaml:"locationID"`
+	PassportLocation   string        `yaml:"passportLocation"`
+	TTL                int           `yaml:"ttl"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"strings"
 	"sync"
@@ -32,13 +33,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIToken string
-
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	SequenceInterval   time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	APIToken           string        `yaml:"apiToken"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	SequenceInterval   time.Duration `yaml:"sequenceInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -52,6 +52,28 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                300,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		SequenceInterval:   dns01.DefaultPropagationTimeout,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 用于配置 DNSProvider 的创建。
+apiToken: "your_api_token"  # API 访问令牌
+propagationTimeout: 60s     # 传播超时时间，定义 DNS 记录传播的最长时间
+pollingInterval: 2s         # 轮询间隔，定义检查 DNS 记录状态的时间间隔
+sequenceInterval: 60s       # 序列间隔，定义每次操作之间的最小时间间隔
+ttl: 300                    # DNS 记录的生存时间（秒）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -74,6 +96,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APIToken = values[EnvAPIToken]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Variomedia.

@@ -4,6 +4,7 @@ package vinyldns
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -26,12 +27,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	AccessKey          string
-	SecretKey          string
-	Host               string
-	TTL                int
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
+	AccessKey          string        `yaml:"accessKey"`
+	SecretKey          string        `yaml:"secretKey"`
+	Host               string        `yaml:"host"`
+	TTL                int           `yaml:"ttl"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -41,6 +42,25 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 4*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                30,
+		PropagationTimeout: 2 * time.Minute,
+		PollingInterval:    4 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 是用来配置 DNSProvider 的创建。
+accessKey: "your_access_key"           # AccessKey，访问密钥，用于身份验证
+secretKey: "your_secret_key"           # SecretKey，秘密密钥，用于身份验证
+host: "dns.api.example.com"            # Host，DNS 服务主机名，用于与 DNS 服务提供商通信的主机名
+ttl: 30                                # TTL，DNS 记录的生存时间（秒）
+propagationTimeout: 120s               # PropagationTimeout，传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 4s                    # PollingInterval，轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -64,6 +84,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Host = values[EnvHost]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for VinylDNS.

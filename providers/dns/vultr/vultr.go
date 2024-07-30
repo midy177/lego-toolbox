@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"strings"
 	"time"
@@ -30,12 +31,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIKey             string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
-	HTTPTimeout        time.Duration
+	APIKey             string        `yaml:"apiKey"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
+	HTTPTimeout        time.Duration `yaml:"httpTimeout"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -46,6 +47,25 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		HTTPTimeout:        env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPTimeout:        30 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+apiKey: "your_api_key"                      # API 密钥
+propagationTimeout: 60s                     # 传播超时时间，单位为秒
+pollingInterval: 20s                        # 轮询间隔时间，单位为秒
+ttl: 120                                    # TTL 值，单位为秒
+httpTimeout: 30s                            # HTTP 超时时间，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -66,6 +86,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APIKey = values[EnvAPIKey]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Vultr.

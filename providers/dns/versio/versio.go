@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"sync"
@@ -32,14 +33,15 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	BaseURL            *url.URL
-	TTL                int
-	Username           string
-	Password           string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	SequenceInterval   time.Duration
-	HTTPClient         *http.Client
+	baseURL            *url.URL      `yaml:"-"`
+	BaseURL            string        `yaml:"baseURL"`
+	TTL                int           `yaml:"ttl"`
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	SequenceInterval   time.Duration `yaml:"sequenceInterval"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -50,7 +52,7 @@ func NewDefaultConfig() *Config {
 	}
 
 	return &Config{
-		BaseURL:            baseURL,
+		baseURL:            baseURL,
 		TTL:                env.GetOrDefaultInt(EnvTTL, 300),
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 60*time.Second),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 5*time.Second),
@@ -59,6 +61,32 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	baseURL, _ := url.Parse(internal.DefaultBaseURL)
+	return &Config{
+		baseURL:            baseURL,
+		TTL:                300,
+		PropagationTimeout: 60 * time.Second,
+		PollingInterval:    5 * time.Second,
+		SequenceInterval:   dns01.DefaultPropagationTimeout,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 是用来配置 DNSProvider 的创建。
+baseURL: "https://www.versio.nl/api/v1/"   # BaseURL，API 端点，用于与 DNS 服务提供商通信的 URL
+ttl: 300                              # TTL，DNS 记录的生存时间（秒）
+username: "your_username"             # 用户名，用于身份验证
+password: "your_password"             # 密码，用于身份验证
+propagationTimeout: 60s               # PropagationTimeout，传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 5s                   # PollingInterval，轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
+sequenceInterval: 60s                 # SequenceInterval，顺序间隔时间，指定系统在处理连续请求时的间隔时间，单位为秒（s）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -83,6 +111,22 @@ func NewDNSProvider() (*DNSProvider, error) {
 	return NewDNSProviderConfig(config)
 }
 
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	if config.BaseURL != "" {
+		config.baseURL, err = url.Parse(config.BaseURL)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return config, nil
+}
+
 // NewDNSProviderConfig return a DNSProvider instance configured for Versio.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
 	if config == nil {
@@ -97,8 +141,8 @@ func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
 
 	client := internal.NewClient(config.Username, config.Password)
 
-	if config.BaseURL != nil {
-		client.BaseURL = config.BaseURL
+	if config.BaseURL != "" {
+		client.BaseURL = config.baseURL
 	}
 
 	if config.HTTPClient != nil {

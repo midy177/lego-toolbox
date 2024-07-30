@@ -4,6 +4,7 @@ package tencentcloud
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"math"
 	"time"
 
@@ -31,15 +32,14 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	SecretID     string
-	SecretKey    string
-	Region       string
-	SessionToken string
-
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPTimeout        time.Duration
+	SecretID           string        `yaml:"secretID"`
+	SecretKey          string        `yaml:"secretKey"`
+	Region             string        `yaml:"region"`
+	SessionToken       string        `yaml:"sessionToken"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPTimeout        time.Duration `yaml:"httpTimeout"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -50,6 +50,28 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		HTTPTimeout:        env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                600,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPTimeout:        30 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+secretID: "your_secret_id"                  # 密钥 ID
+secretKey: "your_secret_key"                # 密钥 Key
+region: "your_region"                       # 区域
+sessionToken: "your_session_token"          # 会话令牌
+propagationTimeout: 600s                    # 传播超时时间，单位为秒
+pollingInterval: 30s                        # 轮询间隔时间，单位为秒
+ttl: 3600                                   # TTL 值，单位为秒
+httpTimeout: 30s                            # HTTP 超时时间，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -73,6 +95,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.SessionToken = env.GetOrDefaultString(EnvSessionToken, "")
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Tencent Cloud DNS.

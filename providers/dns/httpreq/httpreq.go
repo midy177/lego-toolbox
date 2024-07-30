@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"time"
@@ -43,13 +44,14 @@ type messageRaw struct {
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Endpoint           *url.URL
-	Mode               string
-	Username           string
-	Password           string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	HTTPClient         *http.Client
+	Endpoint           *url.URL      `yaml:"-"`
+	EndpointUrl        string        `yaml:"endpoint"`
+	Mode               string        `yaml:"mode"`
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -61,6 +63,27 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config is used to configure the creation of the DNSProvider.
+endpoint: "https://api.example.com"  # API 端点 URL，指定 API 请求的基础 URL
+mode: "production"                   # 运行模式
+username: "your_username"            # API 用户名，用于身份验证
+password: "your_password"            # API 密码，用于身份验证
+propagationTimeout: 60s              # DNS 记录传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 2s                  # 轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -86,6 +109,23 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = env.GetOrFile(EnvPassword)
 	config.Endpoint = endpoint
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	if config.EndpointUrl != "" {
+		endpoint, err := url.Parse(config.EndpointUrl)
+		if err != nil {
+			return nil, fmt.Errorf("httpreq: %w", err)
+		}
+		config.Endpoint = endpoint
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider.

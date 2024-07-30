@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"slices"
 	"strings"
 	"time"
@@ -32,12 +33,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	IamToken string
-	FolderID string
-
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	IamToken           string        `yaml:"iamToken"`
+	FolderID           string        `yaml:"folderID"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -47,6 +47,24 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                60,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+iamToken: "your_iam_token"                 # IAM 令牌
+folderID: "your_folder_id"                 # 文件夹 ID
+propagationTimeout: 60s                    # 传播超时时间，单位为秒
+pollingInterval: 2s                        # 轮询间隔时间，单位为秒
+ttl: 60                                    # TTL 值，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -67,6 +85,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.FolderID = values[EnvFolderID]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Yandex Cloud.

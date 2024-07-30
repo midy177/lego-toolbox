@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -30,10 +31,10 @@ var _ challenge.Provider = &DNSProvider{}
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	AccessToken        string
-	PollingInterval    time.Duration
-	PropagationTimeout time.Duration
-	HTTPClient         *http.Client
+	AccessToken        string        `yaml:"accessToken"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -47,6 +48,24 @@ func NewDefaultConfig() *Config {
 	}
 }
 
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: 2 * time.Minute,
+		PollingInterval:    2 * time.Second,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config is used to configure the creation of the DNSProvider.
+accessToken: "your_access_token"  # 用于 API 访问的令牌，确保请求的身份验证
+pollingInterval: 2s               # 轮询间隔时间，指定系统多久检查一次 DNS 记录的状态，单位为秒
+propagationTimeout: 120s          # 传播超时时间，表示 DNS 记录更新后等待传播的最大时间，单位为秒`
+}
+
 // NewDNSProvider returns the Google Domains DNS provider with a default configuration.
 func NewDNSProvider() (*DNSProvider, error) {
 	values, err := env.Get(EnvAccessToken)
@@ -58,6 +77,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.AccessToken = values[EnvAccessToken]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig returns the Google Domains DNS provider with the provided config.

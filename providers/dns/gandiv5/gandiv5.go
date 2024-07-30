@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"sync"
@@ -41,13 +42,13 @@ type inProgressInfo struct {
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	BaseURL             string
-	APIKey              string // Deprecated use PersonalAccessToken
-	PersonalAccessToken string
-	PropagationTimeout  time.Duration
-	PollingInterval     time.Duration
-	TTL                 int
-	HTTPClient          *http.Client
+	BaseURL             string        `yaml:"baseURL"`
+	APIKey              string        `yaml:"apiKey"` // Deprecated use PersonalAccessToken
+	PersonalAccessToken string        `yaml:"personalAccessToken"`
+	PropagationTimeout  time.Duration `yaml:"propagationTimeout"`
+	PollingInterval     time.Duration `yaml:"pollingInterval"`
+	TTL                 int           `yaml:"ttl"`
+	HTTPClient          *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -60,6 +61,28 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                minTTL,
+		PropagationTimeout: 20 * time.Minute,
+		PollingInterval:    20 * time.Second,
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# config.yaml
+baseURL: "https://api.example.com"          # 基础 URL
+apiKey: "your_api_key"                      # API 密钥 (已弃用，请使用 personalAccessToken)
+personalAccessToken: "your_personal_access_token" # 个人访问令牌
+propagationTimeout: 20m                     # 传播超时时间，单位为秒
+pollingInterval: 20s                        # 轮询间隔时间，单位为秒
+ttl: 300                                    # TTL 值，单位为秒`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -85,6 +108,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.PersonalAccessToken = env.GetOrFile(EnvPersonalAccessToken)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Gandi.

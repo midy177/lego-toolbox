@@ -4,6 +4,7 @@ package vegadns
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	vegaClient "github.com/OpenDNS/vegadns2client"
@@ -26,12 +27,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	BaseURL            string
-	APIKey             string
-	APISecret          string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	BaseURL            string        `yaml:"baseURL"`
+	APIKey             string        `yaml:"apiKey"`
+	APISecret          string        `yaml:"apiSecret"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -41,6 +42,25 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 12*time.Minute),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 1*time.Minute),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                10,
+		PropagationTimeout: 12 * time.Minute,
+		PollingInterval:    1 * time.Minute,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config 是用来配置 DNSProvider 的创建。
+baseURL: "https://api.example.com"    # BaseURL，API 的基础 URL
+apiKey: "your_api_key"                # APIKey，API 访问密钥
+apiSecret: "your_api_secret"          # APISecret，API 访问密钥的秘密
+propagationTimeout: 720s              # PropagationTimeout，传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
+pollingInterval: 60s                  # PollingInterval，轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
+ttl: 10                               # TTL，DNS 记录的生存时间（秒）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -64,6 +84,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APISecret = env.GetOrFile(EnvSecret)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for VegaDNS.

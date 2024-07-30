@@ -393,34 +393,84 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return exoscale.NewDNSProviderConfig(cfg)
 	case "freemyip":
-		return freemyip.NewDNSProvider()
+		cfg, err := freemyip.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return freemyip.NewDNSProviderConfig(cfg)
 	case "gandi":
-		return gandi.NewDNSProvider()
+		cfg, err := gandi.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return gandi.NewDNSProviderConfig(cfg)
 	case "gandiv5":
-		return gandiv5.NewDNSProvider()
+		cfg, err := gandiv5.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return gandiv5.NewDNSProviderConfig(cfg)
 	case "gcloud":
+		// 无法配置
 		return gcloud.NewDNSProvider()
 	case "gcore":
-		return gcore.NewDNSProvider()
+		cfg, err := gcore.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return gcore.NewDNSProviderConfig(cfg)
 	case "glesys":
 		return glesys.NewDNSProvider()
 	case "godaddy":
-		return godaddy.NewDNSProvider()
+		cfg, err := godaddy.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return godaddy.NewDNSProviderConfig(cfg)
 	case "googledomains":
-		return googledomains.NewDNSProvider()
+		cfg, err := googledomains.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return googledomains.NewDNSProviderConfig(cfg)
 	case "hetzner":
-		return hetzner.NewDNSProvider()
+		cfg, err := hetzner.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return hetzner.NewDNSProviderConfig(cfg)
 	case "hostingde":
-		return hostingde.NewDNSProvider()
+		cfg, err := hostingde.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return hostingde.NewDNSProviderConfig(cfg)
 	case "hosttech":
-		return hosttech.NewDNSProvider()
+		cfg, err := hosttech.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return hosttech.NewDNSProviderConfig(cfg)
 	case "httpnet":
-		return httpnet.NewDNSProvider()
+		cfg, err := httpnet.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return httpnet.NewDNSProviderConfig(cfg)
 	case "httpreq":
-		return httpreq.NewDNSProvider()
+		cfg, err := httpreq.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return httpreq.NewDNSProviderConfig(cfg)
 	case "hurricane":
-		return hurricane.NewDNSProvider()
+		cfg, err := hurricane.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return hurricane.NewDNSProviderConfig(cfg)
 	case "hyperone":
+		// 不支持
 		return hyperone.NewDNSProvider()
 	case "ibmcloud":
 		return ibmcloud.NewDNSProvider()
@@ -511,7 +561,11 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 	case "rimuhosting":
 		return rimuhosting.NewDNSProvider()
 	case "route53":
-		return route53.NewDNSProvider()
+		cfg, err := route53.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return route53.NewDNSProviderConfig(cfg)
 	case "safedns":
 		return safedns.NewDNSProvider()
 	case "sakuracloud":
@@ -533,43 +587,115 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 	case "stackpath":
 		return stackpath.NewDNSProvider()
 	case "tencentcloud":
-		return tencentcloud.NewDNSProvider()
+		cfg, err := tencentcloud.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return tencentcloud.NewDNSProviderConfig(cfg)
 	case "transip":
 		return transip.NewDNSProvider()
 	case "ultradns":
-		return ultradns.NewDNSProvider()
+		cfg, err := ultradns.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return ultradns.NewDNSProviderConfig(cfg)
 	case "variomedia":
-		return variomedia.NewDNSProvider()
+		cfg, err := variomedia.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return variomedia.NewDNSProviderConfig(cfg)
 	case "vegadns":
-		return vegadns.NewDNSProvider()
+		cfg, err := vegadns.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return vegadns.NewDNSProviderConfig(cfg)
 	case "vercel":
-		return vercel.NewDNSProvider()
+		cfg, err := vercel.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return vercel.NewDNSProviderConfig(cfg)
 	case "versio":
-		return versio.NewDNSProvider()
+		cfg, err := versio.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return versio.NewDNSProviderConfig(cfg)
 	case "vinyldns":
-		return vinyldns.NewDNSProvider()
+		cfg, err := vinyldns.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return vinyldns.NewDNSProviderConfig(cfg)
 	case "vkcloud":
-		return vkcloud.NewDNSProvider()
+		cfg, err := vkcloud.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return vkcloud.NewDNSProviderConfig(cfg)
 	case "vscale":
-		return vscale.NewDNSProvider()
+		cfg, err := vscale.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return vscale.NewDNSProviderConfig(cfg)
 	case "vultr":
-		return vultr.NewDNSProvider()
+		cfg, err := vultr.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return vultr.NewDNSProviderConfig(cfg)
 	case "webnames":
-		return webnames.NewDNSProvider()
+		cfg, err := webnames.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return webnames.NewDNSProviderConfig(cfg)
 	case "websupport":
-		return websupport.NewDNSProvider()
+		cfg, err := websupport.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return websupport.NewDNSProviderConfig(cfg)
 	case "wedos":
-		return wedos.NewDNSProvider()
+		cfg, err := wedos.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return wedos.NewDNSProviderConfig(cfg)
 	case "yandex":
-		return yandex.NewDNSProvider()
+		cfg, err := yandex.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return yandex.NewDNSProviderConfig(cfg)
 	case "yandex360":
-		return yandex360.NewDNSProvider()
+		cfg, err := yandex360.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return yandex360.NewDNSProviderConfig(cfg)
 	case "yandexcloud":
-		return yandexcloud.NewDNSProvider()
+		cfg, err := yandexcloud.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return yandexcloud.NewDNSProviderConfig(cfg)
 	case "zoneee":
-		return zoneee.NewDNSProvider()
+		cfg, err := zoneee.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return zoneee.NewDNSProviderConfig(cfg)
 	case "zonomi":
-		return zonomi.NewDNSProvider()
+		cfg, err := zonomi.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return zonomi.NewDNSProviderConfig(cfg)
 	default:
 		return nil, fmt.Errorf("unrecognized DNS provider: %s", name)
 	}

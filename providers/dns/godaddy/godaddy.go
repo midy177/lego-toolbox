@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -30,12 +31,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIKey             string
-	APISecret          string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	APIKey             string        `yaml:"apiKey"`
+	APISecret          string        `yaml:"apiSecret"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -48,6 +49,27 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                minTTL,
+		PropagationTimeout: 120 * time.Second,
+		PollingInterval:    2 * time.Second,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Config is used to configure the creation of the DNSProvider.
+apiKey: "your_api_key"       # API 密钥，用于认证和授权访问 DNS 服务
+apiSecret: "your_api_secret" # API 密钥的秘密部分，用于认证
+propagationTimeout: 120s     # 传播超时时间，表示 DNS 记录更新后等待传播的最大时间，单位为秒
+pollingInterval: 2s          # 轮询间隔，表示检查 DNS 记录状态的时间间隔，单位为秒
+ttl: 600                     # DNS 记录的生存时间（TTL），单位为秒，表示记录在缓存中存活的时间`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -70,6 +92,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APISecret = values[EnvAPISecret]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for godaddy.
