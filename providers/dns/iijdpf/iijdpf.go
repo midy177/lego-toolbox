@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge"
@@ -30,13 +31,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Token       string
-	ServiceCode string
-
-	Endpoint           string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	Token              string        `yaml:"token"`
+	ServiceCode        string        `yaml:"serviceCode"`
+	Endpoint           string        `yaml:"endpoint"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -47,6 +47,32 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 5*time.Second),
 		TTL:                env.GetOrDefaultInt(EnvTTL, 300),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		Endpoint:           dpfapi.DefaultEndpoint,
+		PropagationTimeout: 660 * time.Second,
+		PollingInterval:    5 * time.Second,
+		TTL:                300,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# 配置文件模板
+# 访问令牌，用于身份验证
+token: "your_token"
+# 服务代码，用于特定的服务操作
+serviceCode: "your_service_code"
+# 服务端点，API的访问URL
+endpoint: "your_endpoint_url"
+# 传播超时，设置一个时间段，例如：10s, 1m
+propagationTimeout: "11m"
+# 轮询间隔，设置一个时间段，例如：5s, 30s
+pollingInterval: "5s"
+# TTL (Time To Live)，设置一个整数值
+ttl: 300`
 }
 
 var _ challenge.Provider = &DNSProvider{}
@@ -69,6 +95,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.ServiceCode = values[EnvServiceCode]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig takes a given config

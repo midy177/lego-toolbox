@@ -473,11 +473,23 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		// 不支持
 		return hyperone.NewDNSProvider()
 	case "ibmcloud":
-		return ibmcloud.NewDNSProvider()
+		cfg, err := ibmcloud.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return ibmcloud.NewDNSProviderConfig(cfg)
 	case "iij":
-		return iij.NewDNSProvider()
+		cfg, err := iij.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return iij.NewDNSProviderConfig(cfg)
 	case "iijdpf":
-		return iijdpf.NewDNSProvider()
+		cfg, err := iijdpf.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return iijdpf.NewDNSProviderConfig(cfg)
 	case "infoblox":
 		return infoblox.NewDNSProvider()
 	case "infomaniak":
