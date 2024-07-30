@@ -4,6 +4,7 @@ package ibmcloud
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -34,13 +35,13 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Username           string
-	APIKey             string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPTimeout        time.Duration
-	Debug              bool
+	Username           string        `yaml:"username"`
+	APIKey             string        `yaml:"apiKey"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPTimeout        time.Duration `yaml:"httpTimeout"`
+	Debug              bool          `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -51,6 +52,32 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		HTTPTimeout:        env.GetOrDefaultSecond(EnvHTTPTimeout, session.DefaultTimeout),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPTimeout:        session.DefaultTimeout,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# 配置文件模板
+# 用户名，用于身份验证
+username: "your_username"
+# API密钥，用于访问API
+apiKey: "your_api_key"
+# 传播超时，设置一个时间段，例如：10s, 1m
+propagationTimeout: "60s"
+# 轮询间隔，设置一个时间段，例如：5s, 30s
+pollingInterval: "2s"
+# TTL (Time To Live)，设置一个整数值
+ttl: 120
+# HTTP请求超时，设置一个时间段，例如：30s, 1m
+httpTimeout: "120s"`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -74,6 +101,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Debug = env.GetOrDefaultBool(EnvDebug, false)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for IBM Cloud (SoftLayer).

@@ -66,8 +66,7 @@ credentials:
   apiSecret: "your_api_secret"     # API 密钥，用于身份验证
 propagationTimeout: 300s           # DNS 记录传播超时时间，指定更新记录后等待传播的最大时间，单位为秒（s）
 pollingInterval: 2s                # 轮询间隔时间，指定系统检查 DNS 记录状态的频率，单位为秒（s）
-sequenceInterval: 60s              # 序列间隔时间，指定执行序列操作之间的等待时间，单位为秒（s）
-`
+sequenceInterval: 60s              # 序列间隔时间，指定执行序列操作之间的等待时间，单位为秒（s）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
