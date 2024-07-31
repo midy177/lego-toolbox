@@ -491,7 +491,11 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return iijdpf.NewDNSProviderConfig(cfg)
 	case "infoblox":
-		return infoblox.NewDNSProvider()
+		cfg, err := infoblox.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return infoblox.NewDNSProviderConfig(cfg)
 	case "infomaniak":
 		return infomaniak.NewDNSProvider()
 	case "internetbs":

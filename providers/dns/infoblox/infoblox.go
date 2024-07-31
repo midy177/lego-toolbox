@@ -4,6 +4,7 @@ package infoblox
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strconv"
 	"sync"
 	"time"
@@ -39,27 +40,27 @@ const (
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	// Host is the URL of the grid manager.
-	Host string
+	Host string `yaml:"host"`
 	// Port is the Port for the grid manager.
-	Port string
+	Port string `yaml:"port"`
 
 	// Username the user for accessing API.
-	Username string
+	Username string `yaml:"username"`
 	// Password the password for accessing API.
-	Password string
+	Password string `yaml:"password"`
 
 	// DNSView is the dns view to put new records and search from.
-	DNSView string
+	DNSView string `yaml:"dnsView"`
 	// WapiVersion is the version of web api used.
-	WapiVersion string
+	WapiVersion string `yaml:"wapiVersion"`
 
 	// SSLVerify is whether or not to verify the ssl of the server being hit.
-	SSLVerify bool
+	SSLVerify bool `yaml:"sslVerify"`
 
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPTimeout        int
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPTimeout        int           `yaml:"httpTimeout"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -75,6 +76,46 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		HTTPTimeout:        env.GetOrDefaultInt(EnvHTTPTimeout, 30),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		DNSView:            "External",
+		WapiVersion:        "2.11",
+		Port:               "443",
+		SSLVerify:          true,
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPTimeout:        30,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# 配置文件模板
+# Grid管理器的URL
+host: "your_grid_manager_url"
+# Grid管理器的端口
+port: "443"
+# 访问API的用户名
+username: "your_username"
+# 访问API的密码
+password: "your_password"
+# DNS视图，用于放置新记录和搜索
+dnsView: "External"
+# 使用的Web API版本
+wapiVersion: "2.11"
+# 是否验证服务器的SSL
+sslVerify: true
+# 传播超时，设置一个时间段，例如：10s, 1m
+propagationTimeout: "60s"
+# 轮询间隔，设置一个时间段，例如：2s, 30s
+pollingInterval: "2s"
+# TTL (Time To Live)，设置一个整数值
+ttl: 3600
+# HTTP请求超时，设置一个整数值（以秒为单位）
+httpTimeout: 30`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -105,6 +146,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = values[EnvPassword]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for HyperOne.
