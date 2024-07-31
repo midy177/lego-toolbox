@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -28,12 +29,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIKey             string
-	Password           string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	APIKey             string        `yaml:"apiKey"`
+	Password           string        `yaml:"password"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -46,6 +47,32 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                3600,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Configuration for API interaction
+# API key for authentication
+apiKey: "your_api_key_here"
+# Password for authentication
+password: "your_password_here"
+# Timeout duration for propagation (format: "60s" for 60 seconds)
+propagationTimeout: "60s"
+# Interval duration for polling (format: "2s" for 2 seconds)
+pollingInterval: "2s"
+# Time-to-live for cached data (in seconds)
+ttl: 3600`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -67,6 +94,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = values[EnvPassword]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for internet.bs.

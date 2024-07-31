@@ -497,11 +497,23 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return infoblox.NewDNSProviderConfig(cfg)
 	case "infomaniak":
-		return infomaniak.NewDNSProvider()
+		cfg, err := infomaniak.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return infomaniak.NewDNSProviderConfig(cfg)
 	case "internetbs":
-		return internetbs.NewDNSProvider()
+		cfg, err := internetbs.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return internetbs.NewDNSProviderConfig(cfg)
 	case "inwx":
-		return inwx.NewDNSProvider()
+		cfg, err := inwx.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return inwx.NewDNSProviderConfig(cfg)
 	case "ionos":
 		return ionos.NewDNSProvider()
 	case "ipv64":
