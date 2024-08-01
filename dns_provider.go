@@ -509,7 +509,11 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return internetbs.NewDNSProviderConfig(cfg)
 	case "inwx":
-		return inwx.NewDNSProvider()
+		cfg, err := inwx.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return inwx.NewDNSProviderConfig(cfg)
 	case "ionos":
 		return ionos.NewDNSProvider()
 	case "ipv64":

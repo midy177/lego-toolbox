@@ -62,15 +62,16 @@ func DefaultConfig() *Config {
 }
 
 func GetYamlTemple() string {
-	return `# API 密钥，用于身份验证
-apiKey: "your-api-key-here"
-# 密码，用于身份验证
-password: "your-password-here"
-# 传播超时时间，以秒为单位，表示等待 API 响应的最长时间
-propagationTimeout: 30s
-# 轮询间隔时间，以秒为单位，表示在轮询 API 时的时间间隔
-pollingInterval: 10s
-# TTL（存活时间），用于指定资源的存活时间
+	return `# Configuration for API interaction
+# API key for authentication
+apiKey: "your_api_key_here"
+# Password for authentication
+password: "your_password_here"
+# Timeout duration for propagation (format: "60s" for 60 seconds)
+propagationTimeout: "60s"
+# Interval duration for polling (format: "2s" for 2 seconds)
+pollingInterval: "2s"
+# Time-to-live for cached data (in seconds)
 ttl: 3600`
 }
 

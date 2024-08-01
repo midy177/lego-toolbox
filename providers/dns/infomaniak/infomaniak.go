@@ -68,16 +68,18 @@ func DefaultConfig() *Config {
 }
 
 func GetYamlTemple() string {
-	return `# 配置文件的根结构
-# API 端点 URL，用于与 API 服务进行交互
+	return `# Configuration for API interaction
+# API endpoint URL
 endpoint: "https://api.infomaniak.com"
-# 访问令牌，用于身份验证和授权
-accessToken: "your-access-token-here"
-# 传播超时时间，以秒为单位，表示等待 API 响应的最长时间
-propagationTimeout: 60s
-# 轮询间隔时间，以秒为单位，表示在轮询 API 时的时间间隔
-pollingInterval: 2s
-# TTL（存活时间），用于指定资源的存活时间
+# Access token for authentication
+accessToken: "your_access_token_here"
+# Timeout duration for propagation (in nanoseconds, microseconds, milliseconds, etc.)
+# Example: "60s" for 60 seconds
+propagationTimeout: "60s"
+# Interval duration for polling (in nanoseconds, microseconds, milliseconds, etc.)
+# Example: "2s" for 2 seconds
+pollingInterval: "2s"
+# Time-to-live for cached data (in seconds)
 ttl: 7200`
 }
 

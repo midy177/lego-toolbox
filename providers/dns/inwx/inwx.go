@@ -4,6 +4,7 @@ package inwx
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -29,13 +30,13 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Username           string
-	Password           string
-	SharedSecret       string
-	Sandbox            bool
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	SharedSecret       string        `yaml:"sharedSecret"`
+	Sandbox            bool          `yaml:"sandbox"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -47,6 +48,35 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 		Sandbox:            env.GetOrDefaultBool(EnvSandbox, false),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL: 300,
+		// INWX has rather unstable propagation delays, thus using a larger default value
+		PropagationTimeout: 360 * time.Second,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		Sandbox:            false,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# Configuration for API interaction
+# Username for authentication
+username: "your_username_here"
+# Password for authentication
+password: "your_password_here"
+# Shared secret for additional security
+sharedSecret: "your_shared_secret_here"
+# Sandbox mode (true for sandbox, false for production)
+sandbox: true
+# Timeout duration for propagation (format: "60s" for 60 seconds)
+propagationTimeout: "60s"
+# Interval duration for polling (format: "2s" for 2 seconds)
+pollingInterval: "2s"
+# Time-to-live for cached data (in seconds)
+ttl: 300`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -71,6 +101,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.SharedSecret = env.GetOrFile(EnvSharedSecret)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Dyn DNS.
