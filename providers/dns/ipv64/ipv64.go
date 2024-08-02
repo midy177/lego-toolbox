@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -29,11 +30,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	APIKey             string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	HTTPClient         *http.Client
-	SequenceInterval   time.Duration // Deprecated: unused, will be removed in v5.
+	APIKey             string        `yaml:"apiKey"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	HTTPClient         *http.Client  `yaml:"-"`
+	SequenceInterval   time.Duration `yaml:"sequenceInterval"` // Deprecated: unused, will be removed in v5.
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -45,6 +46,25 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+apiKey: "your_api_key_here"           # API 密钥，用于身份验证和授权
+propagationTimeout: 60s               # 传播超时时间，表示系统等待变化传播的最长时间
+pollingInterval: 2s                   # 轮询间隔时间，表示系统定期检查更新的时间间隔
+# sequenceInterval: 10s               # 序列间隔时间，此字段已弃用，将在 v5 中移除`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -65,6 +85,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APIKey = values[EnvAPIKey]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for IPv64.

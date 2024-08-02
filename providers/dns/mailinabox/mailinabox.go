@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -26,11 +27,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Email              string
-	Password           string
-	BaseURL            string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
+	Email              string        `yaml:"email"`
+	Password           string        `yaml:"password"`
+	BaseURL            string        `yaml:"baseURL"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -39,6 +40,23 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 120*time.Second),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 4*time.Second),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		PropagationTimeout: 120 * time.Second,
+		PollingInterval:    4 * time.Second,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+email: "your_email@example.com"               # 电子邮件地址，用于身份验证或通知
+password: "your_password_here"                # 密码，用于身份验证
+baseURL: "https://api.example.com"            # 基础 URL，用于 API 请求
+propagationTimeout: 120s                      # 传播超时时间，表示系统等待变化传播的最长时间
+pollingInterval: 4s                           # 轮询间隔时间，表示系统定期检查更新的时间间隔`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -62,6 +80,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = values[EnvPassword]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for deSEC.

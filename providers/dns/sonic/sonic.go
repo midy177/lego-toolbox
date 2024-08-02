@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -29,13 +30,13 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	UserID             string
-	APIKey             string
-	HTTPClient         *http.Client
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	SequenceInterval   time.Duration
-	TTL                int
+	UserID             string        `yaml:"userID"`
+	APIKey             string        `yaml:"apiKey"`
+	HTTPClient         *http.Client  `yaml:"-"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	SequenceInterval   time.Duration `yaml:"sequenceInterval"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -49,6 +50,29 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		SequenceInterval:   dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+userID: "your_user_id_here"                   # 用户 ID，用于标识用户
+apiKey: "your_api_key_here"                   # API 密钥，用于身份验证和授权
+propagationTimeout: 60s                       # 传播超时时间，表示系统等待变化传播的最长时间
+pollingInterval: 60s                          # 轮询间隔时间，表示系统定期检查更新的时间间隔
+sequenceInterval: 2s                         # 序列间隔时间
+ttl: 120                                      # TTL（Time to Live），表示数据或缓存的有效时间（以秒为单位）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -71,6 +95,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.APIKey = values[EnvAPIKey]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Sonic.

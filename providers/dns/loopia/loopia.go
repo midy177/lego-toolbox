@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"sync"
 	"time"
@@ -39,13 +40,13 @@ type dnsClient interface {
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	BaseURL            string
-	APIUser            string
-	APIPassword        string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPClient         *http.Client
+	BaseURL            string        `yaml:"baseURL"`
+	APIUser            string        `yaml:"apiUser"`
+	APIPassword        string        `yaml:"apiPassword"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPClient         *http.Client  `yaml:"-"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -58,6 +59,28 @@ func NewDefaultConfig() *Config {
 			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 60*time.Second),
 		},
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                minTTL,
+		PropagationTimeout: 40 * time.Minute,
+		PollingInterval:    60 * time.Second,
+		HTTPClient: &http.Client{
+			Timeout: 60 * time.Second,
+		},
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+baseURL: "https://api.loopia.se/RPCSERV"     # 基础 URL，用于 API 请求
+apiUser: "your_api_user_here"                # API 用户名，用于身份验证
+apiPassword: "your_api_password_here"        # API 密码，用于身份验证
+propagationTimeout: 40m                      # 传播超时时间，表示系统等待变化传播的最长时间
+pollingInterval: 60s                         # 轮询间隔时间，表示系统定期检查更新的时间间隔
+ttl: 300                                     # TTL（Time to Live），表示数据或缓存的有效时间（以秒为单位）`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -87,6 +110,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.BaseURL = env.GetOrDefaultString(EnvAPIURL, internal.DefaultBaseURL)
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Loopia.

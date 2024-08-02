@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"time"
 
@@ -35,11 +36,11 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	Token              string
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	TTL                int
-	HTTPTimeout        time.Duration
+	Token              string        `yaml:"token"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	TTL                int           `yaml:"ttl"`
+	HTTPTimeout        time.Duration `yaml:"httpTimeout"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -50,6 +51,25 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 15*time.Second),
 		HTTPTimeout:        env.GetOrDefaultSecond(EnvHTTPTimeout, 0),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                minTTL,
+		PropagationTimeout: 60 * time.Second,
+		PollingInterval:    15 * time.Second,
+		HTTPTimeout:        30,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+token: "your_token_here"              # 令牌，用于身份验证和授权
+propagationTimeout: 60s               # 传播超时时间，表示系统等待变化传播的最长时间
+pollingInterval: 15s                  # 轮询间隔时间，表示系统定期检查更新的时间间隔
+ttl: 3600                             # TTL（Time to Live），表示数据或缓存的有效时间（以秒为单位）
+httpTimeout: 30s                      # HTTP 超时时间，表示 HTTP 请求的最大持续时间`
 }
 
 type hostedZoneInfo struct {
@@ -75,6 +95,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Token = values[EnvToken]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Linode.

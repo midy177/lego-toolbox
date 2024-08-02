@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
@@ -29,12 +30,12 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	ClientID           string
-	ClientSecret       string
-	StackID            string
-	TTL                int
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
+	ClientID           string        `yaml:"clientID"`
+	ClientSecret       string        `yaml:"clientSecret"`
+	StackID            string        `yaml:"stackID"`
+	TTL                int           `yaml:"ttl"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -44,6 +45,25 @@ func NewDefaultConfig() *Config {
 		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
 		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		TTL:                120,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+clientID: "your_client_id_here"              # 客户端 ID，用于身份验证
+clientSecret: "your_client_secret_here"      # 客户端密钥，用于身份验证
+stackID: "your_stack_id_here"                # 堆栈 ID，用于标识特定的堆栈
+ttl: 120                                     # TTL（Time to Live），表示数据或缓存的有效时间（以秒为单位）
+propagationTimeout: 60s                      # 传播超时时间，表示系统等待变化传播的最长时间
+pollingInterval: 2s                          # 轮询间隔时间，表示系统定期检查更新的时间间隔`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -67,6 +87,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.StackID = values[EnvStackID]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Stackpath.

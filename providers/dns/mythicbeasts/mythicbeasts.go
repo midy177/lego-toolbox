@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"time"
@@ -65,6 +66,22 @@ func NewDefaultConfig() (*Config, error) {
 	}, nil
 }
 
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	apiEndpoint, _ := url.Parse(internal.APIBaseURL)
+	authEndpoint, _ := url.Parse(internal.AuthBaseURL)
+	return &Config{
+		TTL:                dns01.DefaultTTL,
+		PropagationTimeout: dns01.DefaultPropagationTimeout,
+		PollingInterval:    dns01.DefaultPollingInterval,
+		APIEndpoint:        apiEndpoint,
+		AuthAPIEndpoint:    authEndpoint,
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
 // DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
@@ -88,6 +105,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Password = values[EnvPassword]
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for mythicbeasts DNSv2 API.

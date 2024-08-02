@@ -4,6 +4,7 @@ package liquidweb
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,14 +37,14 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	BaseURL            string
-	Username           string
-	Password           string
-	Zone               string
-	TTL                int
-	PollingInterval    time.Duration
-	PropagationTimeout time.Duration
-	HTTPTimeout        time.Duration
+	BaseURL            string        `yaml:"baseURL"`
+	Username           string        `yaml:"username"`
+	Password           string        `yaml:"password"`
+	Zone               string        `yaml:"zone"`
+	TTL                int           `yaml:"ttl"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	HTTPTimeout        time.Duration `yaml:"httpTimeout"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -55,6 +56,29 @@ func NewDefaultConfig() *Config {
 		PollingInterval:    env.GetOneWithFallback(EnvPollingInterval, 2*time.Second, env.ParseSecond, altEnvName(EnvPollingInterval)),
 		HTTPTimeout:        env.GetOneWithFallback(EnvHTTPTimeout, 1*time.Minute, env.ParseSecond, altEnvName(EnvHTTPTimeout)),
 	}
+}
+
+// DefaultConfig returns a default configuration for the DNSProvider.
+func DefaultConfig() *Config {
+	return &Config{
+		BaseURL:            defaultBaseURL,
+		TTL:                300,
+		PropagationTimeout: 2 * time.Minute,
+		PollingInterval:    2 * time.Second,
+		HTTPTimeout:        1 * time.Minute,
+	}
+}
+
+func GetYamlTemple() string {
+	return `# YAML 示例
+baseURL: "https://api.liquidweb.com"         # 基础 URL，用于 API 请求
+username: "your_username_here"               # 用户名，用于身份验证
+password: "your_password_here"               # 密码，用于身份验证
+zone: "example.com"                          # 域名区域，用于 DNS 配置
+ttl: 300                                     # TTL（Time to Live），表示数据或缓存的有效时间（以秒为单位）
+pollingInterval: 2s                          # 轮询间隔时间，表示系统定期检查更新的时间间隔
+propagationTimeout: 120s                     # 传播超时时间，表示系统等待变化传播的最长时间
+httpTimeout: 60s                             # HTTP 超时时间，表示 HTTP 请求的超时时间`
 }
 
 // DNSProvider implements the challenge.Provider interface.
@@ -82,6 +106,16 @@ func NewDNSProvider() (*DNSProvider, error) {
 	config.Zone = env.GetOneWithFallback(EnvZone, "", env.ParseString, altEnvName(EnvZone))
 
 	return NewDNSProviderConfig(config)
+}
+
+// ParseConfig parse bytes to config
+func ParseConfig(rawConfig []byte) (*Config, error) {
+	config := DefaultConfig()
+	err := yaml.Unmarshal(rawConfig, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NewDNSProviderConfig return a DNSProvider instance configured for Liquid Web.

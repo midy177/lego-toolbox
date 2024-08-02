@@ -515,33 +515,83 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return inwx.NewDNSProviderConfig(cfg)
 	case "ionos":
-		return ionos.NewDNSProvider()
+		cfg, err := ionos.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return ionos.NewDNSProviderConfig(cfg)
 	case "ipv64":
-		return ipv64.NewDNSProvider()
+		cfg, err := ipv64.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return ipv64.NewDNSProviderConfig(cfg)
 	case "iwantmyname":
-		return iwantmyname.NewDNSProvider()
+		cfg, err := iwantmyname.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return iwantmyname.NewDNSProviderConfig(cfg)
 	case "joker":
-		return joker.NewDNSProvider()
+		cfg, err := joker.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return joker.NewDNSProviderConfig(cfg)
 	case "liara":
-		return liara.NewDNSProvider()
+		cfg, err := liara.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return liara.NewDNSProviderConfig(cfg)
 	case "lightsail":
+		// 不支持
 		return lightsail.NewDNSProvider()
 	case "linode", "linodev4": // "linodev4" is for compatibility with v3, must be dropped in v5
-		return linode.NewDNSProvider()
+		cfg, err := linode.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return linode.NewDNSProviderConfig(cfg)
 	case "liquidweb":
-		return liquidweb.NewDNSProvider()
+		cfg, err := liquidweb.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return liquidweb.NewDNSProviderConfig(cfg)
 	case "loopia":
-		return loopia.NewDNSProvider()
+		cfg, err := loopia.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return loopia.NewDNSProviderConfig(cfg)
 	case "luadns":
-		return luadns.NewDNSProvider()
+		cfg, err := luadns.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return luadns.NewDNSProviderConfig(cfg)
 	case "mailinabox":
-		return mailinabox.NewDNSProvider()
+		cfg, err := mailinabox.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return mailinabox.NewDNSProviderConfig(cfg)
 	case "manual":
+		// 不支持
 		return dns01.NewDNSProviderManual()
 	case "metaname":
-		return metaname.NewDNSProvider()
+		cfg, err := metaname.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return metaname.NewDNSProviderConfig(cfg)
 	case "mydnsjp":
-		return mydnsjp.NewDNSProvider()
+		cfg, err := mydnsjp.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return mydnsjp.NewDNSProviderConfig(cfg)
 	case "mythicbeasts":
 		return mythicbeasts.NewDNSProvider()
 	case "namecheap":
@@ -611,9 +661,17 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 	case "simply":
 		return simply.NewDNSProvider()
 	case "sonic":
-		return sonic.NewDNSProvider()
+		cfg, err := sonic.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return sonic.NewDNSProviderConfig(cfg)
 	case "stackpath":
-		return stackpath.NewDNSProvider()
+		cfg, err := stackpath.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return stackpath.NewDNSProviderConfig(cfg)
 	case "tencentcloud":
 		cfg, err := tencentcloud.ParseConfig(rawConfig)
 		if err != nil {
