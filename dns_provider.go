@@ -593,7 +593,11 @@ func NewDNSChallengeProviderByName(name string, rawConfig []byte) (challenge.Pro
 		}
 		return mydnsjp.NewDNSProviderConfig(cfg)
 	case "mythicbeasts":
-		return mythicbeasts.NewDNSProvider()
+		cfg, err := mythicbeasts.ParseConfig(rawConfig)
+		if err != nil {
+			return nil, err
+		}
+		return mythicbeasts.NewDNSProviderConfig(cfg)
 	case "namecheap":
 		return namecheap.NewDNSProvider()
 	case "namedotcom":

@@ -32,14 +32,14 @@ const (
 
 // Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	UserName           string
-	Password           string
-	HTTPClient         *http.Client
-	PropagationTimeout time.Duration
-	PollingInterval    time.Duration
-	APIEndpoint        *url.URL
-	AuthAPIEndpoint    *url.URL
-	TTL                int
+	UserName           string        `yaml:"userName"`
+	Password           string        `yaml:"password"`
+	HTTPClient         *http.Client  `yaml:"-"`
+	PropagationTimeout time.Duration `yaml:"propagationTimeout"`
+	PollingInterval    time.Duration `yaml:"pollingInterval"`
+	APIEndpoint        *url.URL      `yaml:"-"`
+	AuthAPIEndpoint    *url.URL      `yaml:"-"`
+	TTL                int           `yaml:"ttl"`
 }
 
 // NewDefaultConfig returns a default configuration for the DNSProvider.
@@ -80,6 +80,19 @@ func DefaultConfig() *Config {
 			Timeout: 10 * time.Second,
 		},
 	}
+}
+
+func GetYamlTemple() string {
+	return `# 用户名，用于身份验证
+userName: "your-username-here"
+# 密码，用于身份验证
+password: "your-password-here"
+# 传播超时，指定操作传播的时间间隔，例如：10s
+propagationTimeout: "60s"
+# 轮询间隔，指定轮询操作的时间间隔，例如：2s
+pollingInterval: "2s"
+# TTL (Time To Live)，指定资源的生存时间（秒），例如：3600
+ttl: 120`
 }
 
 // DNSProvider implements the challenge.Provider interface.
