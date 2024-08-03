@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/pquerna/otp/totp"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const (

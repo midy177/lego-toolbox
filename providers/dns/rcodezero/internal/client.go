@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://my.rcodezero.at/api"

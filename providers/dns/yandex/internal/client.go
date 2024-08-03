@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://pddimp.yandex.ru/api2/admin/dns"

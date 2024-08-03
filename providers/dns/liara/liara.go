@@ -14,7 +14,7 @@ import (
 	"github.com/go-acme/lego/v4/log"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/hashicorp/go-retryablehttp"
-	"legotoolbox/providers/dns/liara/internal"
+	"lego-toolbox/providers/dns/liara/internal"
 )
 
 const (

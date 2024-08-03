@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-viper/mapstructure/v2"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const apiEndpoint = "https://kasapi.kasserver.com/soap/KasApi.php"

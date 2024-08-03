@@ -15,7 +15,7 @@ import (
 	"github.com/go-acme/lego/v4/log"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/go-acme/lego/v4/platform/wait"
-	"legotoolbox/providers/dns/variomedia/internal"
+	"lego-toolbox/providers/dns/variomedia/internal"
 )
 
 // Environment variables names.

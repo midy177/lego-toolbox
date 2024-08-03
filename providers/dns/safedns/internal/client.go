@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://api.ukfast.io/safedns/v1"

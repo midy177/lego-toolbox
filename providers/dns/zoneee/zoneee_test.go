@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-acme/lego/v4/platform/tester"
 	"github.com/stretchr/testify/require"
-	"legotoolbox/providers/dns/zoneee/internal"
+	"lego-toolbox/providers/dns/zoneee/internal"
 )
 
 const envDomain = envNamespace + "DOMAIN"

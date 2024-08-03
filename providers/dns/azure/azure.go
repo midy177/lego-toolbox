@@ -16,7 +16,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/go-acme/lego/v4/challenge"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultMetadataEndpoint = "http://169.254.169.254"

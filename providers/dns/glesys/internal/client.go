@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // defaultBaseURL is the GleSYS API endpoint used by Present and CleanUp.

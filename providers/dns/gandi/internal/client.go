@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // defaultBaseURL Gandi XML-RPC endpoint used by Present and CleanUp.

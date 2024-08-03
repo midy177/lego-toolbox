@@ -13,7 +13,7 @@ import (
 	"github.com/go-acme/lego/v4/platform/config/env"
 	selectelapi "github.com/selectel/domains-go/pkg/v2"
 	"github.com/selectel/go-selvpcclient/v3/selvpcclient"
-	"legotoolbox/providers/dns/internal/selectel"
+	"lego-toolbox/providers/dns/internal/selectel"
 )
 
 const tokenHeader = "X-Auth-Token"

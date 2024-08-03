@@ -10,7 +10,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/softlayer/softlayer-go/session"
-	"legotoolbox/providers/dns/ibmcloud/internal"
+	"lego-toolbox/providers/dns/ibmcloud/internal"
 )
 
 // Environment variables names.

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // DefaultIdentityEndpoint the default API identity endpoint.

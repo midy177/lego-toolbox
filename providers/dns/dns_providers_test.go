@@ -6,7 +6,7 @@ import (
 	"github.com/go-acme/lego/v4/platform/tester"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"legotoolbox/providers/dns/exec"
+	"lego-toolbox/providers/dns/exec"
 )
 
 var envTest = tester.NewEnvTest("EXEC_PATH")

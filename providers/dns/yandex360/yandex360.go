@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/yandex360/internal"
+	"lego-toolbox/providers/dns/yandex360/internal"
 )
 
 // Environment variables names.

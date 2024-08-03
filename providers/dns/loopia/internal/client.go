@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // DefaultBaseURL is url to the XML-RPC api.

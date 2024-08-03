@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://api.ns1.hosttech.eu/api"

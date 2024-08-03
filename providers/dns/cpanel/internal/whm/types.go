@@ -3,7 +3,7 @@ package whm
 import (
 	"fmt"
 
-	"legotoolbox/providers/dns/cpanel/internal/shared"
+	"lego-toolbox/providers/dns/cpanel/internal/shared"
 )
 
 type APIResponse[T any] struct {

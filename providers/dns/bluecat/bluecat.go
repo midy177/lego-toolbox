@@ -12,7 +12,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/log"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/bluecat/internal"
+	"lego-toolbox/providers/dns/bluecat/internal"
 )
 
 // Environment variables names.

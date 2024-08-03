@@ -13,7 +13,7 @@ import (
 	"github.com/go-acme/lego/v4/log"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/go-acme/lego/v4/platform/wait"
-	"legotoolbox/providers/dns/cloudns/internal"
+	"lego-toolbox/providers/dns/cloudns/internal"
 )
 
 // Environment variables names.

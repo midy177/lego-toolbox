@@ -15,7 +15,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	querystring "github.com/google/go-querystring/query"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const apiURL = "https://api.nearlyfreespeech.net"

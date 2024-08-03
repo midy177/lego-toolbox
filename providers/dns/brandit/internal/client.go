@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://portal.brandit.com/api/v3/"

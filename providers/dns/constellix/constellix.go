@@ -14,7 +14,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/hashicorp/go-retryablehttp"
-	"legotoolbox/providers/dns/constellix/internal"
+	"lego-toolbox/providers/dns/constellix/internal"
 )
 
 // Environment variables names.

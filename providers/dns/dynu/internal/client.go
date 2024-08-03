@@ -14,7 +14,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-acme/lego/v4/log"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://api.dynu.com/v2"

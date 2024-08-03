@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://api.dynect.net/REST"

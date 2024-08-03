@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-acme/lego/v4/platform/tester"
 	"github.com/stretchr/testify/require"
-	"legotoolbox/providers/dns/checkdomain/internal"
+	"lego-toolbox/providers/dns/checkdomain/internal"
 )
 
 const envDomain = envNamespace + "DOMAIN"

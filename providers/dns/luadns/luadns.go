@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/luadns/internal"
+	"lego-toolbox/providers/dns/luadns/internal"
 )
 
 const minTTL = 300

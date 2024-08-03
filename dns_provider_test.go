@@ -2,7 +2,7 @@ package legotoolbox
 
 import (
 	"fmt"
-	"legotoolbox/providers/dns/alidns"
+	"lego-toolbox/providers/dns/alidns"
 	"testing"
 )
 

@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // defaultBaseURL for reaching the jSON-based API-Endpoint of netcup.

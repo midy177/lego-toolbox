@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // Client the Plesk API client.

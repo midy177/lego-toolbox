@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"legotoolbox/providers/dns/cpanel/internal/shared"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/cpanel/internal/shared"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const statusFailed = 0

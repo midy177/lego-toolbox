@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // authEndpoint represents the Identity API endpoint to call.

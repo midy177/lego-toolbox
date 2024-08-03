@@ -13,7 +13,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/miekg/dns"
-	"legotoolbox/providers/dns/ipv64/internal"
+	"lego-toolbox/providers/dns/ipv64/internal"
 )
 
 // Environment variables names.

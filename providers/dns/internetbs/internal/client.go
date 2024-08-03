@@ -14,7 +14,7 @@ import (
 	"unicode"
 
 	querystring "github.com/google/go-querystring/query"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const baseURL = "https://api.internet.bs"

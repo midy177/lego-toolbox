@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/gandi/internal"
+	"lego-toolbox/providers/dns/gandi/internal"
 )
 
 // Gandi API reference:       http://doc.rpc.gandi.net/index.html

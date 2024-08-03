@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 type token string

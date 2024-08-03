@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const baseURL = "https://public-api.sonic.net/dyndns"

@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"golang.org/x/oauth2"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // DefaultBaseURL default API endpoint.

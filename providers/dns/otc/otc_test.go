@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-acme/lego/v4/platform/tester"
 	"github.com/stretchr/testify/suite"
-	"legotoolbox/providers/dns/otc/internal"
+	"lego-toolbox/providers/dns/otc/internal"
 )
 
 type OTCSuite struct {

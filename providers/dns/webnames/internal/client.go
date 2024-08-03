@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://www.webnames.ru/scripts/json_domain_zone_manager.pl"

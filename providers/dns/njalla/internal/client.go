@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const apiEndpoint = "https://njal.la/api/1/"

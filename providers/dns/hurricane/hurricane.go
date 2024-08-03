@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/hurricane/internal"
+	"lego-toolbox/providers/dns/hurricane/internal"
 )
 
 // Environment variables names.

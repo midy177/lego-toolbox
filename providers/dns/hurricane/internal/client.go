@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://dyn.dns.he.net/nic/update"

@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"legotoolbox/providers/dns/cpanel/internal/shared"
+	"lego-toolbox/providers/dns/cpanel/internal/shared"
 )
 
 func setupTest(t *testing.T, pattern string, filename string) *Client {

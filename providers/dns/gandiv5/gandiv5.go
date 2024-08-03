@@ -14,7 +14,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/log"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/gandiv5/internal"
+	"lego-toolbox/providers/dns/gandiv5/internal"
 )
 
 // Gandi API reference:       http://doc.livedns.gandi.net/

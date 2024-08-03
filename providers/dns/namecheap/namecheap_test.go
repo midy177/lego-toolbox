@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"legotoolbox/providers/dns/namecheap/internal"
+	"lego-toolbox/providers/dns/namecheap/internal"
 )
 
 const (

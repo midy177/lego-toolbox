@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/go-acme/lego/v4/log"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 // defaultBaseURL endpoint is the Gandi API endpoint used by Present and CleanUp.

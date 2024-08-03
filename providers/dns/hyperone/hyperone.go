@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/hyperone/internal"
+	"lego-toolbox/providers/dns/hyperone/internal"
 )
 
 // Environment variables names.

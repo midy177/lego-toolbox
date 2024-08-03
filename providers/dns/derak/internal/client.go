@@ -11,7 +11,7 @@ import (
 	"time"
 
 	querystring "github.com/google/go-querystring/query"
-	"legotoolbox/providers/dns/internal/errutils"
+	"lego-toolbox/providers/dns/internal/errutils"
 )
 
 const defaultBaseURL = "https://api.derak.cloud/v1.0"

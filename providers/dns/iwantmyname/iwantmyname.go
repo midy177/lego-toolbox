@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/iwantmyname/internal"
+	"lego-toolbox/providers/dns/iwantmyname/internal"
 )
 
 // Environment variables names.

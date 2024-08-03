@@ -14,9 +14,9 @@ import (
 
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"legotoolbox/providers/dns/cpanel/internal/cpanel"
-	"legotoolbox/providers/dns/cpanel/internal/shared"
-	"legotoolbox/providers/dns/cpanel/internal/whm"
+	"lego-toolbox/providers/dns/cpanel/internal/cpanel"
+	"lego-toolbox/providers/dns/cpanel/internal/shared"
+	"lego-toolbox/providers/dns/cpanel/internal/whm"
 )
 
 // Environment variables names.

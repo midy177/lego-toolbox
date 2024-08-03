@@ -10,7 +10,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/platform/config/env"
 	"github.com/gophercloud/gophercloud"
-	"legotoolbox/providers/dns/vkcloud/internal"
+	"lego-toolbox/providers/dns/vkcloud/internal"
 )
 
 const (
